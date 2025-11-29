@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>专属客服备注生成助手（纯本地·多级菜单版）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,
+        "Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+    header {
+      background: #111827;
+      color: #f9fafb;
+      padding: 14px 20px;
+    }
+    header h1 { font-size: 20px; margin: 0 0 4px 0; font-weight: 600; }
+    header small { font-size: 12px; opacity: 0.8; }
+
+    main { max-width: 980px; margin: 18px auto 24px; padding: 0 10px; }
+
+    .card {
+      background: #ffffff;
+      border-radius: 14px;
+      box-shadow: 0 8px 20px rgba(15,23,42,0.12);
+      padding: 16px 18px 18px;
+      margin-bottom: 14px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-title span.sub {
+      font-size: 11px;
+      color: #6b7280;
+      font-weight: 400;
+    }
+
+    label {
+      font-size: 12px;
+      color: #4b5563;
+      display: block;
+      margin-bottom: 4px;
+    }
+    input[type="text"],
+    select,
+    textarea {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      padding: 7px 9px;
+      font-size: 13px;
+      outline: none;
+      background: #f9fafb;
+      resize: vertical;
+      min-height: 34px;
+    }
+    textarea { min-height: 60px; }
+    input:focus, select:focus, textarea:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 2px rgba(79,70,229,0.16);
+      background: #ffffff;
+    }
+
+    .row { display: flex; flex-wrap: wrap; gap: 10px 16px; }
+    .col-3 { flex: 0 0 190px; max-width: 240px; }
+    .col-4 { flex: 1 1 210px; max-width: 260px; }
+    .col-6 { flex: 1 1 260px; }
+
+    .hint { font-size: 11px; color: #9ca3af; margin-top: 3px; }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 7px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .btn-primary { background: #4f46e5; color: #ffffff; }
+    .btn-secondary { background: #e5e7eb; color: #111827; }
+
+    .option-list {
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      padding: 8px 10px;
+      background: #f9fafb;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .option-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 4px 2px;
+      font-size: 12px;
+    }
+    .option-item + .option-item {
+      border-top: 1px dashed #e5e7eb;
+      margin-top: 2px;
+      padding-top: 6px;
+    }
+    .option-title {
+      font-weight: 500;
+      color: #111827;
+    }
+    .option-desc {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    .output textarea {
+      font-family: Menlo,Consolas,monospace;
+      background: #020617;
+      color: #e5e7eb;
+      min-height: 180px;
+      line-height: 1.5;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #4f46e5;
+      font-size: 11px;
+      margin-left: 6px;
+    }
+
+    .menu-tip {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+    .menu-tip span.value {
+      color: #4f46e5;
+      font-weight: 500;
+    }
+
+    @media (max-width: 720px) {
+      .col-3, .col-4, .col-6 { flex: 1 1 100%; max-width: 100%; }
+      header { padding: 12px 14px; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>专属客服备注生成助手（纯本地·多级菜单版）</h1>
+  <small>不接 AI，也能让新人：写对备注、选对菜单、判断要不要跟进。</small>
+</header>
+
+<main>
+  <!-- 输入区 -->
+  <section class="card">
+    <div class="card-title">
+      <span>1️⃣ 填写基础信息</span>
+      <span class="sub">先填工单 & 用户第一句话，再看系统给的菜单建议。</span>
+    </div>
+    <div class="row">
+      <div class="col-3">
+        <label>关联工单（人工输入）</label>
+        <input id="ticketId" placeholder="例如：OKX-2025-1128-001" />
+      </div>
+      <div class="col-3">
+        <label>问题性质</label>
+        <select id="problemNature">
+          <option value="反馈">反馈</option>
+          <option value="咨询">咨询</option>
+          <option value="投诉">投诉</option>
+          <option value="建议">建议</option>
+          <option value="其他">其他</option>
+        </select>
+        <div class="hint">只体现在描述里，例如「用户反馈提币不到账」。</div>
+      </div>
+      <div class="col-3">
+        <label>待跟进</label>
+        <select id="needFollow">
+          <option value="自动">自动判断</option>
+          <option value="是">是</option>
+          <option value="否">否</option>
+        </select>
+        <div class="hint">默认「自动」，由下方处理动作判断是否需要持续跟进。</div>
+      </div>
+    </div>
+
+    <div style="margin-top:10px;">
+      <label>用户第一句话 / 关键信息</label>
+      <textarea id="userFirstMsg" placeholder="例如：昨天提USDT到币安，两小时了还没到账，可以帮我查一下吗？"></textarea>
+      <div class="hint">
+        可以复制一段聊天，系统会自动压缩成「用户反馈 xxx」，并尝试识别菜单路径。
+      </div>
+    </div>
+  </section>
+
+  <!-- 多级菜单建议 -->
+  <section class="card">
+    <div class="card-title">
+      <span>2️⃣ 菜单建议（三层结构，可手动调整）</span>
+      <span class="sub">只做“选单参考”，不会写进备注内容。</span>
+    </div>
+    <div class="row">
+      <div class="col-4">
+        <label>一级业务大类</label>
+        <select id="menuL1"></select>
+      </div>
+      <div class="col-4">
+        <label>二级问题场景</label>
+        <select id="menuL2"></select>
+      </div>
+      <div class="col-4">
+        <label>三级细分标签</label>
+        <select id="menuL3"></select>
+      </div>
+    </div>
+    <div class="menu-tip" id="menuTip">
+      菜单建议：<span class="value">暂未识别，可根据聊天内容自行选择。</span>
+    </div>
+    <div class="hint">
+      示例：提币 → 提币不到账 → 链上完成未到账。<br>
+      新人只需要确认这三层是否符合实际，再去系统里选单即可。
+    </div>
+  </section>
+
+  <!-- 快速场景 + 处理动作 -->
+  <section class="card">
+    <div class="card-title">
+      <span>3️⃣ 选择本次处理动作</span>
+      <span class="sub">可以先选上面的「常见处理场景」，再细调。</span>
+    </div>
+
+    <div style="margin-bottom:8px;">
+      <label>常见处理场景（可选）</label>
+      <select id="quickScenario">
+        <option value="">不使用快捷场景，自己勾选</option>
+        <option value="ask+soothe">资金不到账（提币 / 充值 / 转账），先向用户索取资料 + 正常安抚</option>
+        <option value="explain_ok">收益 / 手续费等规则问题，解释规则用户理解</option>
+        <option value="explain_not_ok">解释规则，用户暂未完全理解，需要后续视情况再跟进</option>
+        <option value="upgrade">问题较复杂，已升级技术 / 风控 / 产品，等待结果</option>
+        <option value="suggestion">仅记录用户建议并转交产品评估</option>
+        <option value="pending_info">信息不足，待补充资料，暂无法判断</option>
+        <option value="resolved">问题已处理完成（后台已闭环）</option>
+      </select>
+      <div class="hint">
+        选择后会自动勾选下方对应动作，新人可以直接用；也可以再取消 / 补充。
+      </div>
+    </div>
+
+    <div class="option-list" id="actionList"></div>
+    <div class="hint">
+      跟进规则简化理解：<br>
+      - 勾选「索取资料 / 待补充信息 / 升级处理 / 记录建议」→ 默认需要继续跟进。<br>
+      - 勾选「解释规则用户理解 / 问题已处理完成」且没有上述动作 → 默认不需要继续跟进。
+    </div>
+  </section>
+
+  <!-- 输出区 -->
+  <section class="card output">
+    <div class="card-title">
+      <span>4️⃣ 生成备注</span>
+      <span class="sub">复制框内只有纯备注，菜单建议只在上方展示。</span>
+    </div>
+    <div class="actions">
+      <button class="btn-secondary" id="btnClear">清空</button>
+      <button class="btn-primary" id="btnGenerate">生成备注</button>
+    </div>
+    <textarea id="resultBox" placeholder="生成的备注会出现在这里，可再微调后复制。"></textarea>
+    <div class="actions">
+      <button class="btn-primary" id="btnCopy">复制备注</button>
+    </div>
+  </section>
+</main>
+
+<script>
+  // —— 菜单树（三级结构） —— //
+  const MENU_TREE = [
+    {
+      l1: "提币",
+      children: [
+        {
+          l2: "提币不到账",
+          children: [
+            { l3: "链上完成未到账" },
+            { l3: "链上未确认 / Pending" },
+            { l3: "系统处理中 / 排队中" },
+            { l3: "其他提币不到账场景" }
+          ]
+        },
+        {
+          l2: "哈希值 / TxID 异常",
+          children: [
+            { l3: "哈希值 / TxID 查不到" },
+            { l3: "哈希值填写错误" }
+          ]
+        },
+        {
+          l2: "提币被取消 / 失败",
+          children: [
+            { l3: "系统取消 / 超时" },
+            { l3: "风控拦截 / 审核未通过" }
+          ]
+        },
+        {
+          l2: "网络 / 地址选择错误",
+          children: [
+            { l3: "选择了错误网络" },
+            { l3: "地址填写错误" }
+          ]
+        },
+        {
+          l2: "提币手续费 / 最低限额咨询",
+          children: [
+            { l3: "提币手续费说明" },
+            { l3: "最低提币数量说明" }
+          ]
+        }
+      ]
+    },
+    {
+      l1: "充值",
+      children: [
+        {
+          l2: "充值不到账",
+          children: [
+            { l3: "链上完成未入账" },
+            { l3: "链上未确认 / Pending" },
+            { l3: "内部处理中 / 排队中" }
+          ]
+        },
+        {
+          l2: "充值地址 / 网络错误",
+          children: [
+            { l3: "转错地址" },
+            { l3: "选择错误网络" }
+          ]
+        }
+      ]
+    },
+    {
+      l1: "站内划转 / 转账",
+      children: [
+        {
+          l2: "站内划转不到账",
+          children: [
+            { l3: "资金在中间账户" },
+            { l3: "延迟到账" }
+          ]
+        }
+      ]
+    },
+    {
+      l1: "风险 / 冻结",
+      children: [
+        {
+          l2: "账户 / 提币冻结",
+          children: [
+            { l3: "风控冻结" },
+            { l3: "合规审核中" }
+          ]
+        },
+        {
+          l2: "安全限制 / 登陆受限",
+          children: [
+            { l3: "多地登录 / 异常行为" }
+          ]
+        }
+      ]
+    },
+    {
+      l1: "Earn / APR / 活期理财",
+      children: [
+        {
+          l2: "收益变少 / 不稳定",
+          children: [
+            { l3: "APR 下降咨询" },
+            { l3: "收益发放时间咨询" }
+          ]
+        },
+        {
+          l2: "赎回 / 锁仓问题",
+          children: [
+            { l3: "赎回时间 / 规则咨询" }
+          ]
+        }
+      ]
+    },
+    {
+      l1: "现货网格 / 策略",
+      children: [
+        {
+          l2: "网格追加投资额 / 挂单异常",
+          children: [
+            { l3: "暂停后重启产生额外买入" },
+            { l3: "挂单数量 / 金额异常" }
+          ]
+        },
+        {
+          l2: "策略逻辑咨询",
+          children: [
+            { l3: "网格触发逻辑说明" }
+          ]
+        }
+      ]
+    },
+    {
+      l1: "合约交易",
+      children: [
+        {
+          l2: "强平 / 爆仓",
+          children: [
+            { l3: "强平原因说明" },
+            { l3: "保证金不足说明" }
+          ]
+        },
+        {
+          l2: "保证金 / 杠杆设置咨询",
+          children: [
+            { l3: "保证金率说明" }
+          ]
+        }
+      ]
+    },
+    {
+      l1: "手续费 / 费用",
+      children: [
+        {
+          l2: "现货 / 合约手续费",
+          children: [
+            { l3: "费率档位 / VIP 手续费" }
+          ]
+        },
+        {
+          l2: "Earn / 借贷利息",
+          children: [
+            { l3: "利息计算方式说明" }
+          ]
+        }
+      ]
+    },
+    {
+      l1: "账户 / 登录 / 安全",
+      children: [
+        {
+          l2: "登录 / 验证问题",
+          children: [
+            { l3: "验证码 / 谷歌验证问题" },
+            { l3: "手机更换 / 无法收到验证码" }
+          ]
+        },
+        {
+          l2: "账户安全 / 资产异常",
+          children: [
+            { l3: "疑似被盗 / 未知操作" }
+          ]
+        }
+      ]
+    },
+    {
+      l1: "KYC / 实名 / 视频认证",
+      children: [
+        {
+          l2: "实名认证无法通过",
+          children: [
+            { l3: "资料不完整 / 匹配失败" }
+          ]
+        },
+        {
+          l2: "视频认证 / 补充资料",
+          children: [
+            { l3: "安排视频认证 / 资料审核" }
+          ]
+        }
+      ]
+    },
+    {
+      l1: "投诉 / 表扬",
+      children: [
+        {
+          l2: "投诉服务 / 产品",
+          children: [
+            { l3: "对服务不满意 / 需要升级" }
+          ]
+        },
+        {
+          l2: "表扬 / 好评",
+          children: [
+            { l3: "表扬客服服务" }
+          ]
+        }
+      ]
+    },
+    {
+      l1: "功能 / 操作咨询",
+      children: [
+        {
+          l2: "提币 / 充值 / 转账操作指南",
+          children: [
+            { l3: "如何提币 / 充值 / 转账" }
+          ]
+        },
+        {
+          l2: "产品功能使用说明",
+          children: [
+            { l3: "如何使用某个功能" }
+          ]
+        }
+      ]
+    },
+    {
+      l1: "产品建议 / 体验反馈",
+      children: [
+        {
+          l2: "产品功能建议",
+          children: [
+            { l3: "页面 / 流程优化建议" }
+          ]
+        },
+        {
+          l2: "活动 / 权益建议",
+          children: [
+            { l3: "活动规则 / 奖励建议" }
+          ]
+        }
+      ]
+    }
+  ];
+
+  // —— 处理动作配置 —— //
+  const ACTION_CONFIG = [
+    {
+      value: "索取资料",
+      title: "向用户索取资料（截图 / 哈希值 / 地址等）",
+      desc: "适用于提币 / 充值 / 转账不到账等，需要用户补全哈希值、收款地址截图、链上状态等信息。",
+      phrase: "向用户索取资料，等待答复"
+    },
+    {
+      value: "正常安抚",
+      title: "正常安抚用户",
+      desc: "适用于用户担心资产安全、情绪紧张等场景，先稳定情绪再解释规则。",
+      phrase: "正常安抚用户"
+    },
+    {
+      value: "解释规则用户理解",
+      title: "解释规则，用户理解",
+      desc: "适用于手续费 / APR / 活期借贷 / 产品规则等说明类问题，用户已理解并接受。",
+      phrase: "解释相关规则，用户理解"
+    },
+    {
+      value: "解释规则未完全理解",
+      title: "解释规则，用户暂未完全理解",
+      desc: "已解释规则，但用户仍有疑虑或暂未完全接受，需要视后续情况再沟通。",
+      phrase: "解释相关规则，用户暂未完全理解"
+    },
+    {
+      value: "指导操作",
+      title: "指导用户操作",
+      desc: "适用于需要引导操作步骤的场景，例如如何赎回、如何撤单、如何补仓、如何提币等。",
+      phrase: "指导用户操作"
+    },
+    {
+      value: "升级处理",
+      title: "升级处理，等待结果（如技术 / 风控 / 产品）",
+      desc: "问题超出一线权限，例如风控冻结、系统异常、收益计算异常等，已升级对应团队处理。",
+      phrase: "升级处理，等待结果"
+    },
+    {
+      value: "问题已处理完成",
+      title: "问题已处理完成（后台已闭环）",
+      desc: "已确认问题解决，例如资金到账、订单撤销成功、收益发放正常等。",
+      phrase: "问题已处理完成"
+    },
+    {
+      value: "记录建议",
+      title: "记录用户建议并转交产品评估",
+      desc: "仅为产品优化建议或体验反馈，不涉及立即处理的工单。",
+      phrase: "记录用户建议并转交产品评估"
+    },
+    {
+      value: "待补充信息",
+      title: "待补充信息，暂无法判断",
+      desc: "目前信息不足，无法判断是否存在异常，需要用户或内部补充更多信息。",
+      phrase: "待补充信息，暂无法判断"
+    }
+  ];
+
+  const FOLLOW_ACTIONS_YES = ["索取资料","升级处理","待补充信息","记录建议"];
+  const FOLLOW_ACTIONS_NO  = ["问题已处理完成","解释规则用户理解"];
+
+  // —— 多级菜单渲染 —— //
+  const menuL1El = document.getElementById("menuL1");
+  const menuL2El = document.getElementById("menuL2");
+  const menuL3El = document.getElementById("menuL3");
+  const menuTipValueEl = document.getElementById("menuTip").querySelector(".value");
+
+  function fillSelect(el, options, placeholder) {
+    el.innerHTML = "";
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = placeholder;
+    el.appendChild(opt0);
+    (options || []).forEach(text => {
+      const opt = document.createElement("option");
+      opt.value = text;
+      opt.textContent = text;
+      el.appendChild(opt);
+    });
+  }
+
+  function initMenu() {
+    fillSelect(menuL1El, MENU_TREE.map(n => n.l1), "可选择一级业务大类");
+    fillSelect(menuL2El, [], "先选择一级业务大类");
+    fillSelect(menuL3El, [], "先选择二级问题场景");
+  }
+
+  function updateMenuL2() {
+    const l1 = menuL1El.value;
+    const node1 = MENU_TREE.find(n => n.l1 === l1);
+    if (!node1) {
+      fillSelect(menuL2El, [], "先选择一级业务大类");
+      fillSelect(menuL3El, [], "先选择二级问题场景");
+      updateMenuTipText();
+      return;
+    }
+    fillSelect(menuL2El, node1.children.map(c => c.l2), "请选择二级问题场景");
+    fillSelect(menuL3El, [], "先选择二级问题场景");
+    updateMenuTipText();
+  }
+
+  function updateMenuL3() {
+    const l1 = menuL1El.value;
+    const l2 = menuL2El.value;
+    const node1 = MENU_TREE.find(n => n.l1 === l1);
+    const node2 = node1 ? node1.children.find(c => c.l2 === l2) : null;
+    if (!node2) {
+      fillSelect(menuL3El, [], "先选择二级问题场景");
+      updateMenuTipText();
+      return;
+    }
+    fillSelect(menuL3El, node2.children.map(c => c.l3), "可选择三级细分标签");
+    updateMenuTipText();
+  }
+
+  function updateMenuTipText() {
+    const parts = [];
+    if (menuL1El.value) parts.push(menuL1El.value);
+    if (menuL2El.value) parts.push(menuL2El.value);
+    if (menuL3El.value) parts.push(menuL3El.value);
+    if (parts.length === 0) {
+      menuTipValueEl.textContent = "暂未识别，可根据聊天内容自行选择。";
+    } else {
+      menuTipValueEl.textContent = parts.join(" → ");
+    }
+  }
+
+  menuL1El.addEventListener("change", () => {
+    updateMenuL2();
+  });
+  menuL2El.addEventListener("change", () => {
+    updateMenuL3();
+  });
+  menuL3El.addEventListener("change", updateMenuTipText);
+
+  // —— 根据用户话术进行简单菜单识别 —— //
+  const userFirstMsgEl = document.getElementById("userFirstMsg");
+
+  function detectMenuFromText(text) {
+    const s = (text || "").toLowerCase();
+
+    function setPath(l1, l2, l3) {
+      menuL1El.value = l1 || "";
+      updateMenuL2();
+      if (l2) menuL2El.value = l2;
+      updateMenuL3();
+      if (l3) menuL3El.value = l3;
+      updateMenuTipText();
+    }
+
+    if (!s.trim()) {
+      setPath("", "", "");
+      return;
+    }
+
+    // 提币相关
+    if (s.includes("提币") || s.includes("withdraw")) {
+      if (s.includes("不到账") || s.includes("没到") || s.includes("没收") || s.includes("not arrive")) {
+        if (s.includes("链上") && (s.includes("完成") || s.includes("success"))) {
+          setPath("提币","提币不到账","链上完成未到账");
+          return;
+        }
+        if (s.includes("pending") || s.includes("确认中") || s.includes("未确认")) {
+          setPath("提币","提币不到账","链上未确认 / Pending");
+          return;
+        }
+        setPath("提币","提币不到账","其他提币不到账场景");
+        return;
+      }
+      if (s.includes("hash") || s.includes("txid")) {
+        if (s.includes("查不到") || s.includes("invalid") || s.includes("找不到")) {
+          setPath("提币","哈希值 / TxID 异常","哈希值 / TxID 查不到");
+          return;
+        }
+      }
+      if (s.includes("取消") || s.includes("失败") || s.includes("canceled")) {
+        setPath("提币","提币被取消 / 失败","系统取消 / 超时");
+        return;
+      }
+      setPath("提币","提币手续费 / 最低限额咨询","");
+      return;
+    }
+
+    // 充值
+    if (s.includes("充值") || s.includes("充币") || s.includes("deposit")) {
+      if (s.includes("不到账") || s.includes("没到") || s.includes("没收")) {
+        if (s.includes("链上") && (s.includes("完成") || s.includes("success"))) {
+          setPath("充值","充值不到账","链上完成未入账");
+          return;
+        }
+        setPath("充值","充值不到账","");
+        return;
+      }
+      if (s.includes("错链") || s.includes("地址写错") || s.includes("wrong network")) {
+        setPath("充值","充值地址 / 网络错误","");
+        return;
+      }
+      setPath("充值","充值不到账","");
+      return;
+    }
+
+    // Earn / APR
+    if (s.includes("apr") || s.includes("收益") || s.includes("利息") || s.includes("年化")) {
+      if (s.includes("变少") || s.includes("减少") || s.includes("变低") || s.includes("lower")) {
+        setPath("Earn / APR / 活期理财","收益变少 / 不稳定","APR 下降咨询");
+        return;
+      }
+      setPath("Earn / APR / 活期理财","收益变少 / 不稳定","");
+      return;
+    }
+
+    // 网格
+    if (s.includes("网格") || s.includes("grid")) {
+      if (s.includes("追加") || s.includes("多买") || s.includes("多出")) {
+        setPath("现货网格 / 策略","网格追加投资额 / 挂单异常","暂停后重启产生额外买入");
+        return;
+      }
+      setPath("现货网格 / 策略","策略逻辑咨询","");
+      return;
+    }
+
+    // 合约 / 强平
+    if (s.includes("合约") || s.includes("swap") || s.includes("杠杆")) {
+      if (s.includes("强平") || s.includes("爆仓") || s.includes("liquidation")) {
+        setPath("合约交易","强平 / 爆仓","强平原因说明");
+        return;
+      }
+      setPath("合约交易","保证金 / 杠杆设置咨询","");
+      return;
+    }
+
+    // 投诉 / 表扬
+    if (s.includes("投诉") || s.includes("不满意") || s.includes("差评")) {
+      setPath("投诉 / 表扬","投诉服务 / 产品","对服务不满意 / 需要升级");
+      return;
+    }
+    if (s.includes("你太棒了") || s.includes("very good") || s.includes("表扬")) {
+      setPath("投诉 / 表扬","表扬 / 好评","表扬客服服务");
+      return;
+    }
+
+    // 默认：不自动识别，让新人自己选
+    setPath("", "", "");
+  }
+
+  userFirstMsgEl.addEventListener("input", () => {
+    detectMenuFromText(userFirstMsgEl.value);
+  });
+
+  // —— 处理动作渲染 —— //
+  const actionListEl = document.getElementById("actionList");
+
+  ACTION_CONFIG.forEach(conf => {
+    const item = document.createElement("div");
+    item.className = "option-item";
+    item.innerHTML = `
+      <input type="checkbox" class="action-checkbox" data-value="${conf.value}" />
+      <div>
+        <div class="option-title">${conf.title}</div>
+        <div class="option-desc">${conf.desc}</div>
+      </div>
+    `;
+    actionListEl.appendChild(item);
+  });
+
+  function setActionsByScenario(key) {
+    const checkboxes = document.querySelectorAll(".action-checkbox");
+    checkboxes.forEach(cb => cb.checked = false);
+    if (!key) return;
+    const map = {
+      "ask+soothe": ["索取资料","正常安抚"],
+      "explain_ok": ["解释规则用户理解"],
+      "explain_not_ok": ["解释规则未完全理解","正常安抚"],
+      "upgrade": ["升级处理","正常安抚"],
+      "suggestion": ["记录建议"],
+      "pending_info": ["待补充信息"],
+      "resolved": ["问题已处理完成"]
+    };
+    const list = map[key] || [];
+    checkboxes.forEach(cb => {
+      if (list.includes(cb.dataset.value)) cb.checked = true;
+    });
+  }
+
+  document.getElementById("quickScenario").addEventListener("change", e => {
+    setActionsByScenario(e.target.value);
+  });
+
+  // —— 备注生成逻辑 —— //
+  const problemNatureEl = document.getElementById("problemNature");
+  const needFollowEl = document.getElementById("needFollow");
+
+  function buildProblemDesc(msg) {
+    const raw = (msg || "").trim();
+    if (!raw) return "";
+    const nature = problemNatureEl.value || "反馈";
+    const short = raw.length > 40 ? raw.slice(0, 40) + "…" : raw;
+    return "用户" + nature + short;
+  }
+
+  function buildActionPhrase(selectedValues) {
+    if (!selectedValues.length) return "";
+    const map = {};
+    ACTION_CONFIG.forEach(c => { map[c.value] = c.phrase; });
+    return selectedValues.map(v => map[v]).filter(Boolean).join("，");
+  }
+
+  function suggestNeedFollow(selectedValues) {
+    if (!selectedValues.length) return "";
+    if (selectedValues.some(v => FOLLOW_ACTIONS_YES.includes(v))) return "是";
+    if (selectedValues.some(v => FOLLOW_ACTIONS_NO.includes(v))) return "否";
+    return "否";
+  }
+
+  function buildFollowLine(needFollow, selectedValues) {
+    let reason = "";
+    if (needFollow === "是") {
+      if (selectedValues.includes("索取资料")) {
+        reason = "尚未提供资料";
+      } else if (selectedValues.includes("升级处理")) {
+        reason = "等待升级结果";
+      } else if (selectedValues.includes("待补充信息")) {
+        reason = "等待补充信息";
+      } else if (selectedValues.includes("记录建议")) {
+        reason = "建议已记录，等待内部评估";
+      } else {
+        reason = "后续根据用户反馈跟进";
+      }
+    } else if (needFollow === "否") {
+      if (selectedValues.includes("问题已处理完成")) {
+        reason = "问题已处理完成";
+      } else if (selectedValues.includes("解释规则用户理解")) {
+        reason = "用户已理解";
+      } else {
+        reason = "当前无需继续跟进";
+      }
+    }
+    return "待跟进：" + needFollow + (reason ? "，" + reason : "");
+  }
+
+  function localGenerate() {
+    const ticketId = document.getElementById("ticketId").value.trim() || "（待补充）";
+    const userMsg  = userFirstMsgEl.value.trim();
+    const selectedActions = Array.from(
+      document.querySelectorAll(".action-checkbox")
+    ).filter(cb => cb.checked).map(cb => cb.dataset.value);
+
+    const desc = buildProblemDesc(userMsg) || "（待补充）";
+    const phrase = buildActionPhrase(selectedActions) || "（待补充）";
+
+    let needFollow;
+    if (needFollowEl.value === "是" || needFollowEl.value === "否") {
+      needFollow = needFollowEl.value;
+    } else {
+      needFollow = suggestNeedFollow(selectedActions) || "否";
+    }
+
+    const lines = [];
+    lines.push("关联工单：" + ticketId);
+    lines.push("");
+    lines.push("问题描述：" + desc);
+    lines.push("");
+    lines.push("处理方案：" + phrase);
+    lines.push("");
+    lines.push(buildFollowLine(needFollow, selectedActions));
+
+    document.getElementById("resultBox").value = lines.join("\n");
+  }
+
+  document.getElementById("btnGenerate").addEventListener("click", () => {
+    localGenerate();
+  });
+
+  document.getElementById("btnClear").addEventListener("click", () => {
+    document.getElementById("ticketId").value = "";
+    userFirstMsgEl.value = "";
+    document.getElementById("resultBox").value = "";
+    problemNatureEl.value = "反馈";
+    needFollowEl.value = "自动";
+    document.getElementById("quickScenario").value = "";
+    document.querySelectorAll(".action-checkbox").forEach(cb => cb.checked = false);
+    initMenu();
+    menuTipValueEl.textContent = "暂未识别，可根据聊天内容自行选择。";
+  });
+
+  document.getElementById("btnCopy").addEventListener("click", async () => {
+    const text = document.getElementById("resultBox").value.trim();
+    if (!text) { alert("请先生成备注"); return; }
+    try {
+      await navigator.clipboard.writeText(text);
+      alert("备注已复制");
+    } catch (e) {
+      alert("复制失败，可以手动选择文本复制。");
+    }
+  });
+
+  // 初始化
+  initMenu();
+</script>
+</body>
+</html>
