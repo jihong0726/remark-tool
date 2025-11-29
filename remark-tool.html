@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>专属客服备注生成助手</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; }
+    header { background: #111827; color: #f9fafb; padding: 14px 20px; }
+    main { max-width: 950px; margin: 20px auto; padding: 10px; }
+    .card { background: #fff; border-radius: 10px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
+    textarea, input, select { width: 100%; padding: 8px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc; }
+    .pill { display:inline-block; padding:5px 10px; margin:4px; border-radius:20px; border:1px solid #ccc; cursor:pointer; }
+    .pill.active { background:#4f46e5; color:white; }
+    button { padding:8px 15px; margin-top:10px; border:none; border-radius:20px; cursor:pointer; }
+    .btn-primary { background:#4f46e5; color:white; }
+    .btn-secondary { background:#e5e7eb; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>专属客服备注生成助手</h1>
+</header>
+<main>
+  <div class="card">
+    <label>关联工单</label>
+    <input id="ticketId" placeholder="输入工单号">
+    <label>用户第一句话</label>
+    <textarea id="userFirstMsg"></textarea>
+  </div>
+  <div class="card">
+    <div id="actionGroup"></div>
+  </div>
+  <div class="card">
+    <textarea id="resultBox" placeholder="生成备注"></textarea>
+    <button class="btn-primary" id="btnCopy">复制备注</button>
+  </div>
+</main>
+<script>
+  const actions = ["已向用户索取资料","已正常安抚","已解释规则，用户理解","已升级处理，等待结果","待补充信息，暂无法判断"];
+  const actionGroup = document.getElementById("actionGroup");
+  actions.forEach(a=>{
+    const d=document.createElement("div");d.className="pill";d.innerText=a;
+    d.onclick=()=>d.classList.toggle("active");
+    actionGroup.appendChild(d);
+  });
+  document.getElementById("btnCopy").onclick=()=>{
+    navigator.clipboard.writeText(document.getElementById("resultBox").value);
+    alert("已复制");
+  };
+</script>
+</body>
+</html>
